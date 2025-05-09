@@ -1,16 +1,18 @@
 import { FormProvider, useForm } from "react-hook-form";
-import SuveyForm from "../_components/SurveyForm";
 import { useState } from "react";
 import StepName from "../_components/StepName";
 import StepAge from "../_components/StepAge";
 import StepGender from "../_components/StepGender";
+import SurveyResultSwiper from "../_components/SurveyResultSwiper";
 
 export default function Home() {
   const methods = useForm({ mode: "onBlur" });
   const [step, setStep] = useState(0);
+  const [submittedData, setSubmittedData] = useState(null);
 
   const onSubmit = (data) => {
     console.log("form submit data: ", data);
+    setSubmittedData(data);
     alert("설문조사 제출 완료!!");
   };
 
@@ -28,6 +30,17 @@ export default function Home() {
     <StepAge key={"age"} />,
     <StepGender key={"gender"} />,
   ];
+
+  if (submittedData)
+    return (
+      <SurveyResultSwiper
+        data={submittedData}
+        onResetClick={() => {
+          setSubmittedData(null);
+          setStep(0);
+        }}
+      />
+    );
   return (
     <FormProvider {...methods}>
       <form onSubmit={methods.handleSubmit(onSubmit)}>
