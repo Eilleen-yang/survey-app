@@ -1,7 +1,3 @@
-```
-
-```
-
 # react-hook-form
 
 1. `react-hook-form`을 이용해 간단한 설문조사 폼을 구현
