@@ -1,14 +1,26 @@
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
+import Select from "react-select";
+
+const genderOptions = [
+  { value: "male", label: "남성" },
+  { value: "female", label: "여성" },
+];
 
 export default function SuveyForm() {
   const {
+    control,
     register,
-    handleSubmit,
     watch,
+    handleSubmit,
     formState: { errors },
   } = useForm();
+
   const onSubmit = (data) => {
-    console.log("폼 제출 데이터", data);
+    const submittedData = {
+      ...data,
+      gender: data.gender?.value || "",
+    };
+    console.log("폼 제출 데이터", submittedData);
     alert("설문조사 제출 완료!");
   };
 
@@ -38,11 +50,23 @@ export default function SuveyForm() {
       </div>
       <div>
         <label>성별</label>
-        <select {...register("gender", { required: "성별을 선택해주세요." })}>
+        {/* <select {...register("gender", { required: "성별을 선택해주세요." })}>
           <option value="">선택</option>
           <option value="male">남성</option>
           <option value="female">여성</option>
-        </select>
+        </select> */}
+        <Controller
+          name="gender"
+          control={control}
+          rules={{ required: "성별을 선택해주세요." }}
+          render={({ field }) => (
+            <Select
+              {...field}
+              options={genderOptions}
+              placeholder="성별을 선택하세요."
+            />
+          )}
+        />
         {errors.gender && (
           <p style={{ color: "red" }}>{errors.gender.message}</p>
         )}
