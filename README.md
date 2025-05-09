@@ -1,12 +1,163 @@
-# React + Vite
+```
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+```
 
-Currently, two official plugins are available:
+# react-hook-form
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. `react-hook-form`을 이용해 간단한 설문조사 폼을 구현
+2. 외부 `UI`라이브러리와 연결
 
-## Expanding the ESLint configuration
+- `register`를 통해 `input, select, textarea`에 연결할 수 있다.
+- 하지만, 외부 `UI`라이브러리 & 커스텀 컴포넌트는 직접 `ref, value`를 제어할 수 없기에 `register`로 연결이 불가능 하다.
+- 이럴 때, `react-hook-form`에서 제공하는 `Controller`를 사용한다.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+3. `react-select` 라이브러리 사용
+
+- `Controller`사용해 라이브러리 적용하기
+
+| 개념                   | 설명                                                        |
+| ---------------------- | ----------------------------------------------------------- |
+| Controller             | 커스텀 컴포넌트를 react-hook-form에 연결할 때 사용하는 도구 |
+| field                  | react-hook-form이 제공하는 폼 연결 제어자                   |
+| react-select           | 객체 형태의 값을 다루므로, 제출 시 `.value`로 가공 필요     |
+| register vs Controller | 기본 요소는 register, 커스텀 컴포넌트는 Controller          |
+
+4. 복잡한 폼을 여러 컴포넌트로 나누지만, 여전히 하나의 `useForm()`컨텍스트로 연결된 상태로 관리 할 수 있게 개선하기
+
+- `useForm()`
+- `useFormContext()`
+- `<FormProvider></FormProvider>`
+
+  | 개념               | 설명                                                                             |
+  | ------------------ | -------------------------------------------------------------------------------- |
+  | `useFormContext()` | `FormProvider`로 공유된 `useForm()` 상태를 하위 컴포넌트에서 사용할 수 있게 해줌 |
+  | 실무 적용          | 폼 항목이 많은 페이지에서 컴포넌트로 깔끔하게 분할할 때 매우 유용                |
+  | 주의점             | 반드시 `FormProvider` 안에서만 사용할 수 있음                                    |
+
+5. 사용자가 폼을 제출 했을 때, 초기화
+
+- `reset()`
+- `useForm()`에서 제공하는 모든 입력값을 초기 상태로 되돌려준다.
+
+| 요소      | 설명                                                                |
+| --------- | ------------------------------------------------------------------- |
+| `reset()` | `useForm()`에서 제공. **모든 입력값을 초기 상태로 초기화**          |
+| 호출 시기 | 보통 `handleSubmit(onSubmit)` 내에서 `onSubmit` 콜백이 끝날 때 호출 |
+| 선언 위치 | `const { reset } = useForm()` 또는 `const { reset } = methods`      |
+| 주의할 점 | 초기화되면 `watch()`로 연결된 UI도 자동으로 초기 상태로 돌아감      |
+
+6. 조건부 렌더링으로 `useWatch()`사용하기
+
+```javascript
+{
+  selectedGender?.value === "female" && (
+    <>
+      <br />
+      <label>
+        <input type="checkbox" {...register("pregnant")} />
+        임신 중입니다
+      </label>
+    </>
+  );
+}
+```
+
+- `useFormContext().watch` vs `useWatch()`의 차이점
+
+| 항목            | `useFormContext().watch()`                  | `useWatch()`                      |
+| --------------- | ------------------------------------------- | --------------------------------- |
+| 기본 제공 위치  | `useForm()` 또는 `useFormContext()`         | 별도 훅                           |
+| 감시 방식       | 컴포넌트가 전체 **re-render**               | 필요한 값만 감시 (더 최적화됨)    |
+| 성능            | 감시한 값이 변경되면 전체 컴포넌트 리렌더링 | 해당 값이 바뀔 때만 리렌더링      |
+| 세밀한 제어     | 비교적 제한적 (모든 값 감시됨)              | 특정 필드 감시 및 디커플링된 구조 |
+| 폼 분할에 적합? | 폼 분할 시 불필요한 리렌더 가능성           | 폼 분할에 가장 적합한 방식        |
+
+- watch()는 전체 폼 값에 반응하기 때문에 어떤 필드가 바뀌든 전체가 다시 렌더링된다.
+- 반면 useWatch({ name: 'gender' })는 gender 값만 바뀔 때만 반응하므로 **불필요한 렌더링을 피할 수 있다.**
+
+> 💡 결론적으로 useWatch 는 **폼 분할 구조에서 특정 필드만 감시하고 싶을 때**,<br/>
+> 그리고 **불필요한 리렌더링을 줄이고 성능을 최적화하고 싶을 때** 사용하는 것이 유리
+
+7. 에러 공통컴포넌트로 분리하기
+8. 다중 페이지 폼으로 개선하기 (`input`마다 컴포넌트 분리 `step`으로 나누기)
+
+## Swiper
+
+> 웹과 모바일에서 사용되는 가장 인기 있는 터치 기반 슬라이드(캐러셀) 라이브러리
+
+- 모바일 및 데스크탑에서 모두 호환
+- 반응형 웹사이트에 최적화
+- 터치 스와이프 이벤트를 기반으로한 슬라이드쇼 및 스와이퍼 기능을 지원
+- CSS3 기반으로 애니메이션을 지원
+- 다양한 옵션을 제공하여 사용자가 자유롭게 슬라이드쇼 및 스와이퍼를 커스터마이징 가능
+
+| 기능                     | 설명                                                                              |
+| ------------------------ | --------------------------------------------------------------------------------- |
+| Navigation               | 이전/다음 화살표 버튼 지원                                                        |
+| Pagination               | 현재 슬라이드 위치를 표시하는 점(bullets), 숫자(fraction), 진행바(progressbar) 등 |
+| Touch 지원               | 모바일 및 태블릿에서 자연스러운 슬라이드 제스처                                   |
+| Loop / Autoplay          | 무한 반복 슬라이드 또는 자동 재생                                                 |
+| 다양한 슬라이드 구성     | 다중 슬라이드 보여주기, 가로/세로 방향 변경 등                                    |
+| 모듈 기반 구성           | 필요한 기능만 가져와서 가볍게 사용할 수 있음 (modules)                            |
+| 완전한 커스터마이징 가능 | 스타일, transition, pagination 위치/모양 등 자유롭게 커스터마이징 가능            |
+
+1. 설문조사 완료 후, 응답 결과를 `Swiper`로 슬라이드처럼 보여주기
+2. `Swiper`기능 사용하기
+
+- `swiper/navigation`
+- `swiper/pagination`
+
+## Debouncing vs Throttling
+
+> 성능을 최적화 할 때, 많이 사용한다.
+
+### **🧐 debouncing 디바운싱이란?**
+
+**짧은 시간 내에 연속된 이벤트가 발생했을 때,**<br/>
+**마지막 이벤트가 발생한 후 일정 시간(delay) 동안 아무 이벤트도 발생하지 않아야 실행하는 기법**이다.<br/>
+→ 쉽게 말하면, “입력 끝났을 때 한 번만 실행”하는 방식이다.
+
+### **🧐 debouncing** **왜 사용할까요?**
+
+- 과도한 이벤트 호출(입력, 스크롤 등)을 방지해서 **성능 저하**를 막기 위함.
+- 대표적으로 **검색창** 자동완성, 입력값 유효성 검사 등에 사용.
+
+### **🧐 debouncing 언제 사용할까요?**
+
+- **onChange, onKeyUp, onInput** 등의 이벤트에 대해 사용자가 입력을 마치고 **“조금 기다렸다가”** 처리하고 싶을 때
+- API 호출, 렌더링, 비싼 연산을 줄이고 싶을 때
+
+---
+
+### **🧐 Throttling 쓰로틀링이란?**
+
+**일정 시간 간격으로만 함수가 실행되도록 제어하는 기법**입니다.
+
+쉽게 말하면, “반복되는 이벤트 중 정해진 시간마다 한 번만 실행”합니다.
+
+### **🧐 Throttling 을 왜 사용할까요?**
+
+초당 수십 번 발생할 수 있는 이벤트(스크롤, 마우스 이동 등)를
+
+일정 간격으로 제한해 **브라우저 렌더링/성능 최적화**를 위해 사용합니다.
+
+### **🧐 Throttling 을 언제 사용할까요?**
+
+- **스크롤, resize, mousemove, wheel** 등 **고빈도(자주 일어나는) 이벤트**를 처리할 때
+- 예: 무한 스크롤, 스크롤 위치에 따라 UI 변경
+
+<br/>
+
+| 항목        | Debounce                                                                              | Throttle                                |
+| ----------- | ------------------------------------------------------------------------------------- | --------------------------------------- |
+| 개념        | 마지막 이벤트 이후 일정 시간 지나야 실행                                              | 일정 시간마다 한 번씩만 실행            |
+| 사용 예     | 검색창 입력 처리                                                                      | 스크롤 이벤트 최적화                    |
+| 동작        | 연속된 이벤트 중 **마지막만 실행**<br>즉, 입력이 멈춘 뒤에만 실행 (`delay` 리셋 반복) | 연속된 이벤트 중 **일정 간격마다 실행** |
+| 코드 타이밍 | 지연 실행                                                                             | 간격 실행                               |
+
+### `Debouncing, Throttling`를 이용해성능 최적화하기
+
+- 디바운싱을 이용해 검색 기능 최적화하기
+  - `SearchBar.jsx`
+- 쓰로틀링을 이용하여 스크롤 감지 시 헤더 숨기기
+  - `ScrollHeader.jsx`
